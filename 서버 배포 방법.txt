@@ -1,0 +1,99 @@
+[✳ 서버 배포 흐름]
+ 
+ 1. 로컬에서 이미지 만들기 
+	- MySQL 이미지 
+	- 백엔드 이미지(스프링)
+	- 프론트엔드 이미지(리액트)
+ 
+ 2. ec2 인스턴스(가상 서버)로 이미지 가져오기  
+ 
+ 3. 컨테이너 실행 
+
+[✳ MySQL 이미지 만들기]
+
+ 1. 데이터베이스 덤프 파일 생성
+	- VSCode에서 열기 
+ 
+  *(필요한 경우) 깃허브에 SQL 래퍼지토리 생성 
+  
+ 2. 프로젝트 루트에 docker 폴더 생성 후 아래 파일 추가       
+	- .env  
+	- .env.template  
+	- 데이터베이스 덤프 파일 
+	- Dockerfile     
+ 
+ 3. 터미널 열고 docker 폴더로 경로 설정
+	- cd docker 
+ 
+ 4. 이미지 빌드(태그 포함)
+	- docker build -t 이미지 이름:태그 . 
+ 
+[✳ 스프링 부트 이미지 만들기 - jar 파일 활용] 
+
+ 1. pom.xml에서 <build> 아래 <finalName> 작성  
+	- 생성될 .jar 파일의 이름
+  
+ 2. 프로젝트 루트에 도커 파일 작성
+
+ 3. 터미널 열고 .jar 파일 생성 
+	- mvnw clean package  
+ 
+ 4. 이미지 빌드(태그 포함) 
+	- docker build -t 이미지 이름:태그 .
+
+[✳ React 이미지 만들기] 
+
+ 1. 프로젝트 루트에 Dockerfile 작성 
+	- .env 파일 추가 
+
+ 2. 터미널 열고 리액트 앱을 최적화된 정적 파일로 변환   
+	- npm run build
+
+ 3. 이미지 빌드 
+	- docker build -t 이미지 이름:태그 . 
+
+[✳ 도커 허브에 이미지 업로드] 
+ * ec2 인스턴스에 이미지를 가져오기 위한 작업  
+ 
+ 1. 터미널 열고 도커 허브에 로그인   
+	- docker login 
+
+ 2. 이미지 올리기 
+	- docker push 이미지이름:태그
+
+[✳ ec2 인스턴스로 이미지 가져오기] 
+ 
+ 1. ec2 인스턴스 실행 후 터미널에서 접속 
+	- ssh -i c:/Users/202-02/.ssh/web.pem ec2-user@퍼블릭 IPv4 DNS 주소
+		* web.pem이 존재하는 경로로 설정하기
+
+ 2. 도커 허브에 올린 이미지 가져오기 
+	- docker pull 이미지이름:태그  
+  
+ 3. compose 파일이 위치할 폴더 생성 후 compose.yml 작성 	
+	- cd docker  
+	- cd compose 
+	- vi compose.yml 
+ 
+ 4. 데이터베이스 및 스프링 관련 환경 변수설정 파일 .env 작성
+	- compose.yml 파일이 존재하는 곳에 작성
+	- vi .env 
+ 
+ --중간 점검 
+	- docker images
+	* 컨테이너 실행에 필요한 이미지들이 존재하는지 확인하기(데이터베이스, 스프링 등)  		 
+ 
+ 5. compose.yml 파일을 통해 컨테이너 실행 
+	- compose.yml 파일이 존재하는 경로에서 실행 
+	- docker compose --env-file .env -f compose.yml up -d
+	* --env-file 옵션은 특정 .env 파일을 실행시키기 위함  
+	* -f 옵션은 특정 compose.yml 파일을 실행시키기 위함.
+	* 현재 경로에 compose.yml 파일이 하나만 존재한다면 생략 가능
+
+ 6. 컨테이너가 실행됐는지 확인하기  
+	- docker ps   
+
+ 7. "퍼블릭 IPv4 DNS 주소: 포트 번호" 로 접속해서 작동하는지 확인하기 
+
+
+     
